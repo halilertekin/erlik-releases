@@ -44,6 +44,13 @@ tar -xzf "$WORK/$TARBALL" -C "$PKG"
 cp "$ROOT/npm-README.md" "$PKG/README.md"
 PKG_VER="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["version"])' "$PKG/package.json")"
 [ "$PKG_VER" = "$VER" ] || { echo "❌ paketteki package.json sürümü $PKG_VER (beklenen $VER)"; exit 1; }
+# npm provenance: repository.url yayını yapan public repoyla eşleşmeli (kaynak repo özel)
+python3 - "$PKG/package.json" <<'PY'
+import json, sys
+p = sys.argv[1]; d = json.load(open(p))
+d["repository"] = {"type": "git", "url": "git+https://github.com/halilertekin/erlik-releases.git"}
+json.dump(d, open(p, "w"), indent=2, ensure_ascii=False); open(p, "a").write("\n")
+PY
 
 # 3. Özel altyapı taraması kaynak repodaki sürüm betiğinde, paket yüklenmeden önce yapılır;
 #    burada yalnız imzalı manifestteki sha256 ile birebir aynı paket yayınlanır.
