@@ -1,0 +1,40 @@
+# npm yayını — trusted publishing (OIDC): token yok, 2FA sorusu yok.
+# Kaynak repo özel; bu iş akışı yalnız imzalı manifestle doğrulanan release paketini npm'e taşır.
+# ERLİK sürüm betiği sonunda tetikler; elle: gh workflow run npm-publish.yml -R halilertekin/erlik-releases -f version=3.5.24
+name: npm-publish
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Sürüm (imzalı manifestteki son sürüm olmalı)"
+        required: true
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      - name: npm sürümü (trusted publishing için ≥ 11.5.1)
+        run: npm install -g npm@latest && npm --version
+      - name: api.erlik.be manifesti bu sürümü gösterene kadar bekle (önbellek ≤ 10 dk)
+        env:
+          VER: ${{ inputs.version }}
+        run: |
+          for i in $(seq 1 40); do
+            v=$(curl -fsS https://api.erlik.be/api/update/latest | python3 -c 'import json,sys;print(json.load(sys.stdin)["version"])' || true)
+            [ "$v" = "$VER" ] && exit 0
+            echo "manifest: $v, bekleniyor: $VER"; sleep 20
+          done
+          echo "manifest $VER olmadı"; exit 1
+      - name: Yayınla
+        run: ./scripts/publish-npm.sh "${{ inputs.version }}"
