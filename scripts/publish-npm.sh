@@ -9,7 +9,7 @@ ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"
 REG="https://registry.npmjs.org/"
 MANIFEST_URL="https://api.erlik.be/api/update/latest"
 RELEASES="https://github.com/halilertekin/erlik-releases/releases/download"
-WORK="$(mktemp -d -t erlik-npm)"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/erlik-npm.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
 echo "🐺 ERLİK npm yayını hazırlanıyor..."
