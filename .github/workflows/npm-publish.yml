@@ -16,6 +16,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
+    # Bilerek GitHub-hosted: npm trusted publishing self-hosted runner desteklemiyor
+    # ("Self-hosted runners are not currently supported", docs.npmjs.com/trusted-publishers).
+    # Repo public olduğu için Actions dakikası ücretsiz; özel repolardaki işler self-hosted.
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
